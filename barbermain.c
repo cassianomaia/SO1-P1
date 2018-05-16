@@ -110,9 +110,14 @@ int main(int argc, char *argv[]) {
     // barber thread.
     allDone = 1;
     sem_post(&barberPillow);  // Wake the barber so he will exit.
-    for(i=0;i<3;i++){
-    	pthread_join(btid[i],NULL);    
-    }
+    sem_post(&barberPillow);
+    sem_post(&barberPillow);
+    sleep(1);
+    printf("The shop is closed.\n");
+    //for(i=0;i<3;i++){
+    //	pthread_join(btid[i],NULL);    
+    //}
+    return 0;
 }
 
 void *customer(void *number) {
@@ -126,7 +131,7 @@ void *customer(void *number) {
 
     sem_wait(&waitingRoom);
     printf("Customer %d entering the barbershop.\n", num);
-    
+
     // Wait for space to open up in the waiting room...
     sem_wait(&couch);
     printf("Customer %d siting at the couch.\n", num);
