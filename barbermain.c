@@ -16,9 +16,13 @@ void randwait(int secs);
 
 // Define the semaphores.
 
-// waitingRoom Limits the # of customers allowed 
-// to enter the waiting room at one time.
-sem_t waitingRoom;   
+// waiting room defines the number of persons waiting em pé
+
+sem_t waitingRoom;
+
+// couch Limits the # of customers allowed 
+// to sit at the couch at one time.
+sem_t couch;   
 
 // barberChair ensures mutually exclusive access to
 // the barber chair.
@@ -77,7 +81,8 @@ int main(int argc, char *argv[]) {
     }
 
     // Initialize the semaphores with initial values...
-    sem_init(&waitingRoom, 0, numChairs);
+    sem_init(&waitingRoom, 0, 16);
+    sem_init(&couch, 0, numChairs);
     sem_init(&barberChair, 0, 3);
     sem_init(&barberPillow, 0, 0);
     sem_init(&seatBelt, 0, 0);
@@ -119,16 +124,19 @@ void *customer(void *number) {
     randwait(5);
     printf("Customer %d arrived at barber shop.\n", num);
 
-    // Wait for space to open up in the waiting room...
     sem_wait(&waitingRoom);
-    printf("Customer %d entering waiting room.\n", num);
+    printf("Customer %d entering the barbershop.\n", num);
+    
+    // Wait for space to open up in the waiting room...
+    sem_wait(&couch);
+    printf("Customer %d siting at the couch.\n", num);
 
     // Wait for the barber chair to become free.
     sem_wait(&barberChair);
 
     // The chair is free so give up your spot in the
     // waiting room.
-    sem_post(&waitingRoom);
+    sem_post(&couch);
 
     // Wake up the barber...
     printf("Customer %d waking the barber.\n", num);
