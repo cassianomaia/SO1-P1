@@ -12,12 +12,17 @@
 void *customer(void *num);
 void *barber(void *);
 
-void randwait(int secs);
+void randwait(int secs){
+    int len;
+
+    // Generate a random number...
+    len = (int) ((drand48() * secs) + 1);
+    sleep(len);
+}
 
 // Define the semaphores.
 
 // waiting room defines the number of persons waiting em pé
-
 sem_t waitingRoom;
 
 // couch Limits the # of customers allowed 
@@ -158,40 +163,32 @@ void *customer(void *number) {
 
 void *barber(void *numberbarber) {
     int numbarber = *(int*)numberbarber;
-    // While there are still customers to be serviced...
-    // Our barber is omnicient and can tell if there are 
-    // customers still on the way to his shop.
-    while (!allDone) {
-
-    // Sleep until someone arrives and wakes you..
-    printf("The barber %d is sleeping \n", numbarber);
-    sem_wait(&barberPillow);
-
-    // Skip this stuff at the end...
-    if (!allDone) {
-
-        // Take a random amount of time to cut the
-        // customer's hair.
-        
-        printf("The barber %d is cutting hair of %d \n", numbarber, nextcustomer);
-        nextcustomer = 0;
-        sem_wait(&workbarber);
-        randwait(3);
-        printf("The barber %d has finished cutting hair.\n", numbarber);
-
-        // Release the customer when done cutting...
-        sem_post(&seatBelt);
+    	// While there are still customers to be serviced...
+    	// Our barber is omnicient and can tell if there are 
+    	// customers still on the way to his shop.
+    	while (!allDone) {
+    		
+    	// Sleep until someone arrives and wakes you..
+    	printf("The barber %d is sleeping \n", numbarber);
+    	sem_wait(&barberPillow);
+    	
+    	// Skip this stuff at the end...
+    	if (!allDone) {
+    		
+    	    // Take a random amount of time to cut the
+    	    // customer's hair.
+    	    
+    	    printf("The barber %d is cutting hair of %d.\n", numbarber, nextcustomer);
+    	    nextcustomer = 0;
+    	    sem_wait(&workbarber);
+    	    randwait(3);
+    	    printf("The barber %d has finished cutting hair.\n", numbarber);
+    	    
+    	    // Release the customer when done cutting...
+    	    sem_post(&seatBelt);
+    	}
+    	else {
+    	    printf("The barber %d is going home for the day.\n", numbarber);
+    	}
     }
-    else {
-        printf("The barber %d is going home for the day.\n", numbarber);
-    }
-    }
-}
-
-void randwait(int secs) {
-    int len;
-
-    // Generate a random number...
-    len = (int) ((drand48() * secs) + 1);
-    sleep(len);
 }
