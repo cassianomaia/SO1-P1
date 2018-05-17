@@ -12,3 +12,11 @@ Our barbershop has three chairs, three barbers, and a waiting area that can acco
 Para compilar o programa realizamos os seguintes passos:
 
 1- gcc -o barber -std=c99 barbermain.c queue.c -lpthread -lm
+
+### Realizado pelos alunos:
+* Anderson Alan Montor - RA:726495
+* Cassiano Maia - RA:726507
+* Julia Milani  - RA:726552
+* Mariana Cavichioli Silva - RA:726568
+
+**Disciplina:** Sistemas Operacionais 01 - Profª Kellen Vivaldini
