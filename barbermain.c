@@ -1,4 +1,4 @@
-// to compile gcc -o barber -std=c99 barbermain.c -lpthread -lm
+// to compile gcc -o barber -std=c99 barbermain.c queue.c -lpthread -lm
 #define _REETRANT
 #include <stdio.h>
 #include <unistd.h>
@@ -123,7 +123,7 @@ int main(int argc, char *argv[]) {
     sem_init(&semCutHair,0,1);
     sem_init(&semPayment,0,1);
     sem_init(&semPaid,0,1);
-    sem_init(&abletopay,0,1);
+    sem_init(&abletopay,0,0);
     // Create the barber.
     for(i=0;i<3;i++){
     	pthread_create(&btid[i], NULL, barber, (void *)&Barbers[i]);
@@ -150,9 +150,9 @@ int main(int argc, char *argv[]) {
     sem_post(&barberPillow);
     sleep(1);
     printf("The shop is closed.\n");
-    //for(i=0;i<3;i++){
-    //	pthread_join(btid[i],NULL);    
-    //}
+    // /for(i=0;i<3;i++){
+    // /	pthread_join(btid[i],NULL);    
+    // /}
     return 0;
 }
 
@@ -184,9 +184,7 @@ void *customer(void *number) {
     // waiting room.
     sem_wait(&semNextCust);
     num = dequeue(queueNextSofa);
-    sem_post(&semNextCust);
     sem_post(&couch);
-    sem_wait(&semNextCust);
     enqueue(queueNextCust, num);
     sem_post(&semNextCust);
     // Wake up the barber...
@@ -198,13 +196,13 @@ void *customer(void *number) {
 
     // Give up the chair.
     sem_post(&barberChair);
-    //sem_wait(&semCutHair);
-    //num = dequeue(queueCutHair);
-    //sem_post(&semCutHair);
-    //sem_wait(&abletopay);
-    //sem_wait(&semPayment);
-    //enqueue(queuePayment, num);
-    //sem_post(&semPayment);
+    sem_wait(&semCutHair);
+    num = dequeue(queueCutHair);
+    sem_post(&semCutHair);
+    sem_wait(&semPayment);
+    enqueue(queuePayment, num);
+    sem_post(&semPayment);
+    sem_post(&abletopay);
     //sem_wait(&semPaid);
     //sem_wait(&semGoingHome);
     //num = dequeue(queueGoingHome);
@@ -241,20 +239,19 @@ void *barber(void *numberbarber) {
     		    // Release the customer when done cutting...
     		    sem_post(&seatBelt);
     		    numnextcustomer = 0;
-    		    //sem_post(&abletopay);
-    		    //sem_wait(&semPayment);
-    		    //numnextcustomer = dequeue(queuePayment);
-    		    //sem_post(&semPayment);
-    		    //printf("The barber %d is receiving from the customer %d.\n", numbarber, numnextcustomer);
-    		    //randwait(3);
+    		    sem_wait(&abletopay);
+    		    sem_wait(&semPayment);
+    		    numnextcustomer = dequeue(queuePayment);
+    		    sem_post(&semPayment);
+    		    printf("The barber %d is receiving from the customer %d.\n", numbarber, numnextcustomer);
+    		    randwait(3);
     		    //sem_wait(&semGoingHome);
     		    //enqueue(queueGoingHome, numnextcustomer);
     		    //sem_post(&semGoingHome);
     		    //sem_post(&semPaid);
-    		    //
-    		    //numnextcustomer = 0;
-    	}
-    	else {
+    		    sem_post(&abletopay);
+    		    numnextcustomer = 0;
+    	}else {
     	    printf("The barber %d is going home for the day.\n", numbarber);
     	}
     }
