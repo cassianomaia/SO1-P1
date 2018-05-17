@@ -19,4 +19,6 @@ Para compilar o programa realizamos os seguintes passos:
 * Julia Milani  - RA:726552
 * Mariana Cavichioli Silva - RA:726568
 
+Grupo 02.
+
 **Disciplina:** Sistemas Operacionais 01 - Profª Kellen Vivaldini
