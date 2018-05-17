@@ -9,9 +9,15 @@ Our barbershop has three chairs, three barbers, and a waiting area that can acco
 
 ### Instruções para compilação do programa
 
-Para compilar o programa realizamos os seguintes passos:
+Para compilar e executar o programa realizamos os seguintes passos:
 
 1- gcc -o barber -std=c99 barbermain.c queue.c -lpthread -lm
+
+2- ./barber param1 param2 param3 
+
+OBS: 
+
+- O param1 a ser passado é referente ao número de clientes da barbearia.
 
 ### Realizado pelos alunos:
 * Anderson Alan Montor - RA:726495
@@ -19,6 +25,6 @@ Para compilar o programa realizamos os seguintes passos:
 * Julia Milani  - RA:726552
 * Mariana Cavichioli Silva - RA:726568
 
-Grupo 02.
+**Grupo 02.**
 
 **Disciplina:** Sistemas Operacionais 01 - Profª Kellen Vivaldini
