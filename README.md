@@ -10,4 +10,5 @@ Our barbershop has three chairs, three barbers, and a waiting area that can acco
 ### Instruções para compilação do programa
 
 Para compilar o programa realizamos os seguintes passos:
+
 1- gcc -o barber -std=c99 barbermain.c queue.c -lpthread -lm
