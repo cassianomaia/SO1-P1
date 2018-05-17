@@ -199,14 +199,15 @@ void *customer(void *number) {
     sem_wait(&semCutHair);
     num = dequeue(queueCutHair);
     sem_post(&semCutHair);
-    sem_wait(&semPayment);
-    enqueue(queuePayment, num);
-    sem_post(&semPayment);
+    //sem_wait(&semPayment);
+    //enqueue(queuePayment, num);
+    //sem_post(&semPayment);
     sem_post(&abletopay);
     //sem_wait(&semPaid);
     //sem_wait(&semGoingHome);
     //num = dequeue(queueGoingHome);
     //sem_post(&semGoingHome);
+    sem_wait(&semPaid);
     printf("Customer %d leaving barber shop.\n", num);
 }
 
@@ -238,17 +239,17 @@ void *barber(void *numberbarber) {
     		    sem_post(&semCutHair);
     		    // Release the customer when done cutting...
     		    sem_post(&seatBelt);
-    		    numnextcustomer = 0;
+    		    //numnextcustomer = 0;
     		    sem_wait(&abletopay);
-    		    sem_wait(&semPayment);
-    		    numnextcustomer = dequeue(queuePayment);
-    		    sem_post(&semPayment);
+    		    //sem_wait(&semPayment);
+    		    //numnextcustomer = dequeue(queuePayment);
+    		    //sem_post(&semPayment);
     		    printf("The barber %d is receiving from the customer %d.\n", numbarber, numnextcustomer);
     		    randwait(3);
     		    //sem_wait(&semGoingHome);
     		    //enqueue(queueGoingHome, numnextcustomer);
     		    //sem_post(&semGoingHome);
-    		    //sem_post(&semPaid);
+    		    sem_post(&semPaid);
     		    sem_post(&abletopay);
     		    numnextcustomer = 0;
     	}else {
