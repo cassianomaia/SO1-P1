@@ -3,27 +3,40 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <sstream>  
+#include <string> 
 #include <pthread.h>
 #include <semaphore.h>
+#include <SFML/Graphics.hpp>
 #include "queue.h"
 
 
 #define MAX_CUSTOMERS_THREADS 50                    // Número máximo de threads de clientes
 #define MAX_CUSTOMERS 20                            // Número máximo de clientes que a barbearia suporta
-#define COUCH_SEATS 3                               // Número de espaços no sofá
+#define COUCH_SEATS 4                               // Número de espaços no sofá
 #define WAITING_ROOM_SPACE 13                       // Espaço na sala de espera em pé
 
+enum StatesBarber {SLEEPING, CUTTING, PAYING};
 
 // Protótipo das funções principais
 void *customer(void *num);
 void *barber(void *);
+void *draw_thread(void *unused);
 
 void randwait(int secs){
     int len;
     // Gera um número aleatório
     len = (int) ((drand48() * secs) + 1);
-    sleep(len);
+    sleep(2 * len);
 }
+
+template <typename T>
+  std::string NumberToString ( T Number )
+  {
+     std::ostringstream ss;
+     ss << Number;
+     return ss.str();
+  }
 
 // DEFINIÇÃO DE SEMÁFOROS
 
@@ -82,6 +95,9 @@ sem_t ableToPay;
 int numCustomersOnShop = 0;
 sem_t semNumCustomersOnShop;
 
+// Variaveis para renderização
+int barbersClients[] = {-1, -1, -1}; // -1 = No client
+int barbersState[] = {SLEEPING, SLEEPING, SLEEPING};
 
 // MAIN DO PROGRAMA
 
@@ -90,10 +106,13 @@ int main(int argc, char *argv[]) {
     // Declaração das threads e variáveis
     pthread_t btid[2];
     pthread_t tid[MAX_CUSTOMERS_THREADS];
+    pthread_t tdraw;
     long RandSeed;
     int i, numCustomers;
     int Number[MAX_CUSTOMERS_THREADS], Barbers[3];
-
+    barbersClients[0] = -1;
+    barbersClients[1] = -1;
+    barbersClients[2] = -1;
 
     // Checagem dos argumentos passados por linha de comando
     if (argc != 3) {
@@ -162,6 +181,9 @@ int main(int argc, char *argv[]) {
     for (i=0; i<numCustomers; i++) {
         pthread_create(&tid[i], NULL, customer, (void *)&Number[i]);
     }
+
+    // Criação da thread de renderização
+    pthread_create(&tdraw, NULL, draw_thread, NULL);
 
     // Join das threads que faz com que todas esperem a finalização
     for (i=0; i<numCustomers; i++) {
@@ -266,6 +288,8 @@ void *barber(void *numberbarber) {
                 
             // O barbeiro dorme até que algum cliente o acorde
             printf("O barbeiro %d esta dormindo. \n", numbarber);
+            barbersState[numbarber] = SLEEPING;
+
             sem_wait(&barberPillow);
             
             if (!allDone) {
@@ -276,10 +300,14 @@ void *barber(void *numberbarber) {
                 numnextcustomer = dequeue(queueNextCust);
                 sem_post(&semNextCust);
                 printf("O barbeiro %d esta cortando o cabelo do cliente %d.\n", numbarber, numnextcustomer);
+                barbersState[numbarber] = CUTTING;
+                barbersClients[numbarber] = numnextcustomer;
 
                 sem_wait(&workBarber);
                 randwait(3);
                 printf("O barbeiro %d terminou o corte.\n", numbarber);
+                barbersState[numbarber] = SLEEPING;
+                barbersClients[numbarber] = -1;
 
                 sem_wait(&semCutHair);
                 enqueue(queueCutHair, numnextcustomer);
@@ -290,14 +318,125 @@ void *barber(void *numberbarber) {
                 sem_wait(&ableToPay);
 
                 printf("O barbeiro %d esta recebendo o pagamento do cliente %d.\n", numbarber, numnextcustomer);
+                barbersState[numbarber] = PAYING;
+                barbersClients[numbarber] = numnextcustomer;
                 randwait(3);
 
                 sem_post(&semPaid);
                 sem_post(&ableToPay);
+                barbersState[numbarber] = SLEEPING;
                 numnextcustomer = 0;
 
         }else {
             printf("O barbeiro %d esta indo para casa.\n", numbarber);
         }
     }
+}
+
+
+void *draw_thread(void *unused){
+
+    sf::RenderWindow window(sf::VideoMode(800, 600), "Sleeping Barbers Problem");
+    window.setFramerateLimit(60);
+
+    sf::RectangleShape pessoa(sf::Vector2f(25, 25));
+
+    sf::Font font;
+    font.loadFromFile("arial.ttf");
+
+    sf::Text text;
+    text.setFont(font);
+    
+    text.setCharacterSize(24);
+    text.setColor(sf::Color::Black);
+
+    sf::Texture t_legenda;
+    t_legenda.loadFromFile("legenda.png");
+
+    sf::Sprite s_legenda;
+    s_legenda.setTexture(t_legenda);
+    s_legenda.setPosition(sf::Vector2f(500, 450));
+
+
+    while (window.isOpen())
+    {
+        sf::Event event;
+        while (window.pollEvent(event))
+        {
+            if (event.type == sf::Event::Closed)
+                window.close();
+        }
+
+        window.clear(sf::Color::White);
+
+        pessoa.setFillColor(sf::Color::Red);
+
+        //Draw waiting room
+        for (int i = 0; i < queueNextWr->size; i++){
+
+            pessoa.setPosition(sf::Vector2f(200 + (i*30), 100));
+            text.setPosition(sf::Vector2f(200 + (i*30), 100));
+            text.setString(NumberToString(queueNextWr->array[(queueNextWr->front + i) % queueNextWr->capacity]));
+            window.draw(pessoa);
+            window.draw(text);
+        }
+
+        //Draw couch
+        for (int i = 0; i < queueNextSofa->size; i++){
+
+            pessoa.setPosition(sf::Vector2f(200 + (i*30), 200));
+            text.setPosition(sf::Vector2f(200 + (i*30), 200));
+            text.setString(NumberToString(queueNextSofa->array[(queueNextSofa->front + i) % queueNextSofa->capacity]));
+            window.draw(pessoa);
+            window.draw(text);
+        }
+
+
+        //Draw barbers and clients cutting hair / paying
+        for (int i = 0; i < 3; i++){
+            switch (barbersState[i]){
+                case SLEEPING:
+                    pessoa.setFillColor(sf::Color::Green);
+                    break;
+                case CUTTING:
+                    pessoa.setFillColor(sf::Color::Blue);
+                    break;
+                case PAYING:
+                    pessoa.setFillColor(sf::Color::Yellow);
+                    break;
+            }
+            
+            pessoa.setPosition(sf::Vector2f(200 + (i*30), 300));
+            window.draw(pessoa);
+
+            if (barbersState[i] != SLEEPING){
+                pessoa.setFillColor(sf::Color::Red);
+                pessoa.setPosition(sf::Vector2f(200 + (i*30), 350));
+                text.setPosition(sf::Vector2f(200 + (i*30), 350));
+                text.setString(NumberToString(barbersClients[i]));
+                window.draw(pessoa);
+                window.draw(text);
+            }
+
+        }
+
+        text.setPosition(sf::Vector2f(0, 100));
+        text.setString("Waiting room:");
+        window.draw(text);
+
+        text.setPosition(sf::Vector2f(0, 200));
+        text.setString("Couch:");
+        window.draw(text);
+
+        text.setPosition(sf::Vector2f(0, 300));
+        text.setString("Barbers:");
+        window.draw(text);
+
+        window.draw(s_legenda);
+
+        window.display();
+    }
+
+    return 0;
+
 }

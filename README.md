@@ -11,9 +11,12 @@ Our barbershop has three chairs, three barbers, and a waiting area that can acco
 
 Para compilar e executar o programa realizamos os seguintes passos:
 
-1- gcc -o barber -std=c99 barbermain.c queue.c -lpthread -lm
+1 - Instale a biblioteca SFML: sudo apt-get install libsfml-dev
+(para Debian e derivados, checar pagina do SFML para outras distros)
 
-2- ./barber param1 param2
+2 - Compile: g++ barbermain.c queue.c -o barber -lpthread -lm -lsfml-graphics -lsfml-window -lsfml-system
+
+3 - Execute: ./barber param1 param2
 
 **OBS:** 
 
