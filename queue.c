@@ -1,45 +1,41 @@
-// C program for array implementation of queue
-// code from http://www.geeksforgeeks.org/queue-set-1introduction-and-array-implementation/
+// Implementação da fila
 #include <stdio.h>
 #include <stdlib.h>
 #include <limits.h>
 #include "queue.h"
 
-// function to create a queue of given capacity.
-// It initializes size of queue as 0
+// Função para criar uma fila com o tamanho especificado
+// As filas são inicializadas com 0
 struct Queue* createQueue(unsigned capacity) {
     struct Queue* queue = (struct Queue*) malloc(sizeof(struct Queue));
     queue->capacity = capacity;
     queue->front = queue->size = 0;
-    queue->rear = capacity - 1;  // This is important, see the enqueue
+    queue->rear = capacity - 1;  
     queue->array = (int*) malloc(queue->capacity * sizeof(int));
 
     return queue;
 }
 
-// Queue is full when size becomes equal to the capacity
+// A fila está cheia quando seu tamanho é igual a sua capacidade
 int isFull(struct Queue* queue) {
     return (queue->size == queue->capacity);
 }
 
-// Queue is empty when size is 0
+// A fila está vazia quando seu tamanho é 0
 int isEmpty(struct Queue* queue) {
     return (queue->size == 0);
 }
 
-// Function to add an item to the queue.
-// It changes rear and size
+// Função para enfileirar; ela altera o último elemento e a quantidade
 void enqueue(struct Queue* queue, int item) {
     if (isFull(queue))
         return;
     queue->rear = (queue->rear + 1)%queue->capacity;
     queue->array[queue->rear] = item;
     queue->size = queue->size + 1;
-    //printf("%d enqueued to queue\n", item);
 }
 
-// Function to remove an item from queue.
-// It changes front and size
+// Função para desinfileirar; ela altera o primeiro elemento e a quantidade
 int dequeue(struct Queue* queue) {
     if (isEmpty(queue))
         return INT_MIN;
@@ -50,7 +46,7 @@ int dequeue(struct Queue* queue) {
     return item;
 }
 
-// Function to get front of queue
+// Função para encontrar o primeiro elemento
 int front(struct Queue* queue) {
     if (isEmpty(queue))
         return INT_MIN;
@@ -58,7 +54,7 @@ int front(struct Queue* queue) {
     return queue->array[queue->front];
 }
 
-// Function to get rear of queue
+// Função para encontrar o último elemento
 int rear(struct Queue* queue) {
     if (isEmpty(queue))
         return INT_MIN;

@@ -10,7 +10,7 @@ int front(struct Queue* queue);
 int rear(struct Queue* queue);
 
 
-// A structure to represent a queue
+// A structure que representa todas as filas
 struct Queue {
     int front, rear, size;
     unsigned capacity;
