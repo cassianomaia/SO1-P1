@@ -13,11 +13,12 @@ Para compilar e executar o programa realizamos os seguintes passos:
 
 1- gcc -o barber -std=c99 barbermain.c queue.c -lpthread -lm
 
-2- ./barber param1 param2 param3 
+2- ./barber param1 param2
 
-OBS: 
+**OBS:** 
 
 - O param1 a ser passado é referente ao número de clientes da barbearia.
+- O param2 a ser passado é um número aleatório para setar a seed de tempo utilizada.
 
 ### Realizado pelos alunos:
 * Anderson Alan Montor - RA:726495
