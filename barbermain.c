@@ -347,7 +347,7 @@ void *draw_thread(void *unused){
     sf::Text text;
     text.setFont(font);
     
-    text.setCharacterSize(24);
+    
     text.setColor(sf::Color::Black);
 
     sf::Texture t_legenda;
@@ -370,6 +370,7 @@ void *draw_thread(void *unused){
         window.clear(sf::Color::White);
 
         pessoa.setFillColor(sf::Color::Red);
+        text.setCharacterSize(24);
 
         //Draw waiting room
         for (int i = 0; i < queueNextWr->size; i++){
@@ -420,6 +421,8 @@ void *draw_thread(void *unused){
 
         }
 
+
+
         text.setPosition(sf::Vector2f(0, 100));
         text.setString("Waiting room:");
         window.draw(text);
@@ -430,6 +433,11 @@ void *draw_thread(void *unused){
 
         text.setPosition(sf::Vector2f(0, 300));
         text.setString("Barbers:");
+        window.draw(text);
+
+        text.setPosition(sf::Vector2f(210, 0));
+        text.setCharacterSize(30);
+        text.setString("Sleeping Barbers Problem");
         window.draw(text);
 
         window.draw(s_legenda);
