@@ -170,10 +170,10 @@ void *customer(void *number) {
     printf("Customer %d leaving for barber shop.\n", num);
     randwait(5);
     if(numcustomersonshop <= MAX_CUSTOMERS){
+        printf("Customer %d arrived at barber shop.\n", num);
         sem_wait(&semNumCustomersonshop);
         numcustomersonshop++;
         sem_post(&semNumCustomersonshop);
-        printf("Customer %d arrived at barber shop.\n", num);
 
         sem_wait(&waitingRoom);
         sem_wait(&semNextWr);
