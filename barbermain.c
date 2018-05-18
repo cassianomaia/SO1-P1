@@ -10,7 +10,7 @@
 #define MAX_CUSTOMERS_THREADS 50
 #define MAX_CUSTOMERS 20
 #define COUCH_SEATS 3
-#define WAITING_ROOM_SPACE 16
+#define WAITING_ROOM_SPACE 13
 
 // Function prototypes...
 void *customer(void *num);
@@ -108,7 +108,7 @@ int main(int argc, char *argv[]) {
 		Barbers[i] = i;
     }
 
-    queueNextWr = createQueue(20);
+    queueNextWr = createQueue(15);
     queueNextSofa = createQueue(4);
     queueNextCust = createQueue(3);
     queueCutHair = createQueue(3);
