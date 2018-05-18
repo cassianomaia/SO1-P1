@@ -7,7 +7,10 @@
 #include <semaphore.h>
 #include "queue.h"
 // The maximum number of customer threads.
-#define MAX_CUSTOMERS 25
+#define MAX_CUSTOMERS_THREADS 50
+#define MAX_CUSTOMERS 20
+#define COUCH_SEATS 4
+#define WAITING_ROOM_SPACE 16
 
 // Function prototypes...
 void *customer(void *num);
@@ -65,31 +68,33 @@ sem_t abletopay;
 sem_t semGoingHome;
 struct Queue *queueGoingHome;
 
+int numcustomersonshop = 0;
+sem_t semNumCustomersonshop;
+
 int main(int argc, char *argv[]) {
     pthread_t btid[2];
-    pthread_t tid[MAX_CUSTOMERS];
+    pthread_t tid[MAX_CUSTOMERS_THREADS];
     long RandSeed;
-    int i, numCustomers, numChairs;
-    int Number[MAX_CUSTOMERS], Barbers[3];
+    int i, numCustomers;
+    int Number[MAX_CUSTOMERS_THREADS], Barbers[3];
 
 
     // Check to make sure there are the right number of
     // command line arguments.
-    if (argc != 4) {
-    printf("Use: SleepBarber <Num Customers> <Num Chairs> <rand seed>\n");
+    if (argc != 3) {
+    printf("Use: SleepBarber <Num Customers> <rand seed>\n");
     exit(-1);
     }
 
     // Get the command line arguments and convert them
     // into integers.
     numCustomers = atoi(argv[1]);
-    numChairs = atoi(argv[2]);
-    RandSeed = atol(argv[3]);
+    RandSeed = atol(argv[2]);
 
     // Make sure the number of threads is less than the number of
     // customers we can support.
-    if (numCustomers > MAX_CUSTOMERS) {
-    printf("The maximum number of Customers is %d.\n", MAX_CUSTOMERS);
+    if (numCustomers > MAX_CUSTOMERS_THREADS) {
+    printf("The maximum number of Customers is %d.\n", MAX_CUSTOMERS_THREADS);
     exit(-1);
     }
 
@@ -110,8 +115,8 @@ int main(int argc, char *argv[]) {
     queuePayment = createQueue(3);
     queueGoingHome = createQueue(3);
     // Initialize the semaphores with initial values...
-    sem_init(&waitingRoom, 0, 16);
-    sem_init(&couch, 0, numChairs);
+    sem_init(&waitingRoom, 0, WAITING_ROOM_SPACE);
+    sem_init(&couch, 0, COUCH_SEATS);
     sem_init(&barberChair, 0, 3);
     sem_init(&barberPillow, 0, 0);
     sem_init(&seatBelt, 0, 0);
@@ -123,13 +128,14 @@ int main(int argc, char *argv[]) {
     sem_init(&semCutHair,0,1);
     sem_init(&semPayment,0,1);
     sem_init(&semPaid,0,1);
-    sem_init(&abletopay,0,0);
+    sem_init(&abletopay,0,1);
+    sem_init(&semNumCustomersonshop,0,1);
     // Create the barber.
     for(i=0;i<3;i++){
     	pthread_create(&btid[i], NULL, barber, (void *)&Barbers[i]);
     }
         // Initialize the numbers array.
-    for (i=0; i<MAX_CUSTOMERS; i++){
+    for (i=0; i<MAX_CUSTOMERS_THREADS; i++){
     	Number[i] = i;
     }
     // Create the customers.
@@ -163,52 +169,62 @@ void *customer(void *number) {
     // time to arrive.
     printf("Customer %d leaving for barber shop.\n", num);
     randwait(5);
-    printf("Customer %d arrived at barber shop.\n", num);
+    if(numcustomersonshop <= MAX_CUSTOMERS){
+        sem_wait(&semNumCustomersonshop);
+        numcustomersonshop++;
+        sem_post(&semNumCustomersonshop);
+        printf("Customer %d arrived at barber shop.\n", num);
 
-    sem_wait(&waitingRoom);
-    sem_wait(&semNextWr);
-    enqueue(queueNextWr, num);
-    printf("Customer %d entering the barbershop.\n", num);
-    // Wait for space to open up in the waiting room...
-    sem_post(&semNextWr);
-    sem_wait(&couch);
-    sem_wait(&semNextSofa);
-    num = dequeue(queueNextWr);
-    sem_post(&waitingRoom);
-    enqueue(queueNextSofa, num);
-    printf("Customer %d siting at the couch.\n", num);
-    // Wait for the barber chair to become free.
-    sem_post(&semNextSofa);
-    sem_wait(&barberChair);
-    // The chair is free so give up your spot in the
-    // waiting room.
-    sem_wait(&semNextCust);
-    num = dequeue(queueNextSofa);
-    sem_post(&couch);
-    enqueue(queueNextCust, num);
-    sem_post(&semNextCust);
-    // Wake up the barber...
-    printf("Customer %d waking the barber.\n", num);
-    sem_post(&barberPillow);
-    sem_post(&workbarber);
-    // Wait for the barber to finish cutting your hair.
-    sem_wait(&seatBelt);
+        sem_wait(&waitingRoom);
+        sem_wait(&semNextWr);
+        enqueue(queueNextWr, num);
+        printf("Customer %d entering the barbershop.\n", num);
+        // Wait for space to open up in the waiting room...
+        sem_post(&semNextWr);
+        sem_wait(&couch);
+        sem_wait(&semNextSofa);
+        num = dequeue(queueNextWr);
+        sem_post(&waitingRoom);
+        enqueue(queueNextSofa, num);
+        printf("Customer %d siting at the couch.\n", num);
+        // Wait for the barber chair to become free.
+        sem_post(&semNextSofa);
+        sem_wait(&barberChair);
+        // The chair is free so give up your spot in the
+        // waiting room.
+        sem_wait(&semNextCust);
+        num = dequeue(queueNextSofa);
+        sem_post(&couch);
+        enqueue(queueNextCust, num);
+        sem_post(&semNextCust);
+        // Wake up the barber...
+        printf("Customer %d waking the barber.\n", num);
+        sem_post(&barberPillow);
+        sem_post(&workbarber);
+        // Wait for the barber to finish cutting your hair.
+        sem_wait(&seatBelt);
 
-    // Give up the chair.
-    sem_post(&barberChair);
-    sem_wait(&semCutHair);
-    num = dequeue(queueCutHair);
-    sem_post(&semCutHair);
-    //sem_wait(&semPayment);
-    //enqueue(queuePayment, num);
-    //sem_post(&semPayment);
-    sem_post(&abletopay);
-    //sem_wait(&semPaid);
-    //sem_wait(&semGoingHome);
-    //num = dequeue(queueGoingHome);
-    //sem_post(&semGoingHome);
-    sem_wait(&semPaid);
-    printf("Customer %d leaving barber shop.\n", num);
+        // Give up the chair.
+        sem_post(&barberChair);
+        sem_wait(&semCutHair);
+        num = dequeue(queueCutHair);
+        sem_post(&semCutHair);
+        //sem_wait(&semPayment);
+        //enqueue(queuePayment, num);
+        //sem_post(&semPayment);
+        sem_post(&abletopay);
+        //sem_wait(&semPaid);
+        //sem_wait(&semGoingHome);
+        //num = dequeue(queueGoingHome);
+        //sem_post(&semGoingHome);
+        sem_wait(&semPaid);
+        sem_wait(&semNumCustomersonshop);
+        numcustomersonshop--;
+        sem_post(&semNumCustomersonshop);
+        printf("Customer %d leaving barber shop.\n", num);
+    }else{
+        printf("Shop is full. Customer %d is going home.\n", num);
+    }
 }
 
 void *barber(void *numberbarber) {
