@@ -169,14 +169,14 @@ void *customer(void *number) {
     // time to arrive.
     printf("Customer %d leaving for barber shop.\n", num);
     randwait(5);
+    printf("Customer %d arrived at barber shop.\n", num);
+    numcustomersonshop++;
     if(numcustomersonshop <= MAX_CUSTOMERS){
-        printf("Customer %d arrived at barber shop.\n", num);
         //sem_wait(&semNumCustomersonshop);
         //numcustomersonshop++;
         //sem_post(&semNumCustomersonshop);
 
         sem_wait(&waitingRoom);
-        numcustomersonshop++;
         sem_wait(&semNextWr);
         enqueue(queueNextWr, num);
         printf("Customer %d entering the barbershop.\n", num);
