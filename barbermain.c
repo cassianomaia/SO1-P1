@@ -9,7 +9,7 @@
 // The maximum number of customer threads.
 #define MAX_CUSTOMERS_THREADS 50
 #define MAX_CUSTOMERS 20
-#define COUCH_SEATS 4
+#define COUCH_SEATS 3
 #define WAITING_ROOM_SPACE 16
 
 // Function prototypes...
@@ -108,7 +108,7 @@ int main(int argc, char *argv[]) {
 		Barbers[i] = i;
     }
 
-    queueNextWr = createQueue(13);
+    queueNextWr = createQueue(20);
     queueNextSofa = createQueue(4);
     queueNextCust = createQueue(3);
     queueCutHair = createQueue(3);
